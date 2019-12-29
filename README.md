@@ -124,8 +124,6 @@ Pronto, agora atualizou apenas o valor.
 
 Redux é fácil, basta entender o conceito de Actions, Store e Reducers, e principalmente quando utilizar o Redux na aplicação.
 
-Código: https://github.com/tgmarinho/rocketshoes/tree/aula-01-conceitos-redux
-
 ## Aula 02 - Estrutura do Projeto
 
 Vamos criar uma loja virtual de calçados (Rocketshoes) para aprender a implementação do Redux.
@@ -136,8 +134,6 @@ Utilizaremos o Create React App para criar o frontend da aplicação em React:
 npx create-react-app rocketshoes
 ```
 
-E configurei conforme a [aula](https://github.com/tgmarinho/front-react/commit/287881809382cf33c18a14dec9b01d6965aa90e5)
-
 Executei no terminal:
 
 ```shell
@@ -145,3 +141,17 @@ yarn & yarn start
 ```
 
 Pronto, tudo rodando!
+
+## Aula 03 - Configurando Rotas
+
+Vamos criar a configuração de navegação do projeto.
+
+Não importei o `BrowserRouter` de dentro do `routes.js` pois iremos criar um componente Header que também precisará de ter acesso aos dados da rota.
+
+Então os componentes que precisarão de Rotas vão ficar no App.js
+
+## Aula 04 - Estilos Globais
+
+- Instalamos a lib styled-components;
+- Criamos o arquivo globals.js com os estilos globais;
+- Importamos o estilo para App.js
