@@ -173,3 +173,85 @@ https://www.youtube.com/watch?v=CbFMwHvHK1Y
 
 - Criamos a estilização no arquivo styled.js e aplicamos no index.js do Cart
 - Utilizamos novamente a lib do polished para gerenciar a cor do hover do botão finalizar pedido.
+
+## Aula 08 - Configurando a API
+
+Configurar a API para consumir produtos.
+
+Utilizamos a API [json-server](https://github.com/typicode/json-server) para criar uma API Fake, que simula o que aconteceria em uma API Real.
+
+Só criar um json com os dados fake e rodar o json-server que vai simular a API, inclusive dá para configurar tempo de resposta e outras coisas mais.
+
+Para instalar de forma global na máquina:
+
+```text
+yarn add json-server -D
+```
+
+Depois criar um arquivo `server.json` na raiz do projeto e colocar os dados contendo o estoque (stock) e os produtos (products), inclusive fazendo os relacionamentos com id.
+
+Teremos uma rota stock que retorna o estoque dos produtos, e a rota products que retorna os produtos.
+
+Vamos configurar o axios para consumir essa api.
+
+```shell
+yarn add axios
+```
+
+Veja o arquivo `api.js` no código fonte.
+
+E para rodar a api fake, basta rodar:
+
+```shell
+yarn json-server server.json -p 3333 -w
+```
+
+E podemos também ter um script no package.json:
+
+```json
+...
+"server":  "json-server server.json -p 3333 -w"
+...
+```
+
+E rodar `yarn server` para executar a api.
+
+- json-server é o nome da lib
+- server.json é o nome do arquivo que tem a api fake e está na raiz do projeto, por isso não passo o caminho, apenas o nome do arquivo. Está no mesmo nível do package.json
+- -p 3333 é a porta que defini para rodar essa api
+- -w é para ficar `watching` cada alteração que eu fizer na api, se eu mudar alguma coisa lá dentro não preciso rodar o comando novamente.
+
+Pronto agora para acessar, só chamar a rota que deseja:
+
+```text
+http://localhost:3333/stock
+```
+
+e
+
+```text
+http://localhost:3333/products
+```
+
+Ambas as rotas vão mostrar um array com seus respectivos objetos.
+
+Legal, que se eu chamar o produto e passando o id, ele me traz apenas o produto com seu respectivo id informado:
+
+```
+[http://localhost:3333/products/4](http://localhost:3333/products/4)
+```
+
+Se eu passar um ID q não exisite ele retorna um objeto vazio.
+
+Dá até para deletar e atualizar valores dentro dessa api, é muito legal!
+
+Excelente para usar em modo de desenvolvimento no frontend quando um backend não foi feito ainda com a API.
+
+## Aula 09 - Buscando produtos da API
+
+Nessa aula vamos buscar os dados da API e renderizar na tela do usuário, seguindo algumas boas práticas de código.
+
+- Transformar o componente stateless Home em uma classe statefull para poder armazenar o estado dos products que vieram da API.
+- Criei um arquivo `format.js` dentro de `src/util` que exporta uma função que formata valores em moeda brasileira, utilizando a instância de `Intl.NumberFormat` do Javascript.
+- Buscamos os dados da API, armazenamos no estado products, e populamos a lista de produtos na tela
+- Assim que buscamos os dados da API fizemos um map para devolver um array de produtos com o preço formatado, ao invés de usar a função `formatPrice()` de dentro do render na variável price do product. Não é recomendado colocar funções que manipulam variáveis de dentro do render, pois a cada alteração no estado, essa função é chamada também, fazendo com que perca performance, a ideia é sempre entregar para o render os valores prontos para serem renderizados e qualquer formatação deve ser feita antes.
