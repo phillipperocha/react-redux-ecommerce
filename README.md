@@ -161,3 +161,10 @@ Então os componentes que precisarão de Rotas vão ficar no App.js
 - Crio o componente de estilização do header
 - Crio o componente Header que tem uma logo e link para a home e o carrinho e o link para o carrinho
 - Coloco o Header no topo do App.js
+
+## Aula 06 - Estilização da Home
+
+- Criamos a estilização no arquivo styled.js e aplicamos no index.js da Home
+- Destaque para a lib [polished](https://polished.js.org/) que instalamos, com `yarn add polished`. Agora podemos manipular as cores com essa lib.
+
+https://www.youtube.com/watch?v=CbFMwHvHK1Y
