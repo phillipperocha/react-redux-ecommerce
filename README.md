@@ -168,3 +168,8 @@ Então os componentes que precisarão de Rotas vão ficar no App.js
 - Destaque para a lib [polished](https://polished.js.org/) que instalamos, com `yarn add polished`. Agora podemos manipular as cores com essa lib.
 
 https://www.youtube.com/watch?v=CbFMwHvHK1Y
+
+## Aula 07 - Estilização do Carrinho
+
+- Criamos a estilização no arquivo styled.js e aplicamos no index.js do Cart
+- Utilizamos novamente a lib do polished para gerenciar a cor do hover do botão finalizar pedido.
