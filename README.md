@@ -826,3 +826,347 @@ export default function cart(state = [], action) {
 Pronto, toda vez que for incluído o produto, vai ser criado um estado com os dados do produto e o valor do amount será 1.
 
 Na próxima aula iremos resolver o problema de produto duplicado. Pois o comportamento esperado é atualizar a quantidade de produto e não duplicar o mesmo produto quando adicionamos ele mais de uma vez no carrinho.
+
+## Aula 14 - Produto duplicado
+
+Quando o usuário adicionar o mesmo produto no carrinho, vamos somar a quantidade em vez de duplicar.
+
+Vamos utilizar uma lib [immerjs](https://github.com/immerjs/immer) para lidar com objetos e arrays que são imutáveis.
+
+```shell
+yarn add immer
+```
+
+Com o immer nós importamos a função `produce` do `immer`, e essa função recebe o estado (state) atual e um rascunho (draftState) que podemos fazer qualquer coisa, programar sem utilizar os principios de imutabilidade, podemos fazer push no array, setar valor na mão mesmo, conforme o exemplo abaixo, ele vai pegar o rascunho e fazer as alterações do jeito certo (imutável) e disponibilizar no `nextState`.
+
+> The basic idea is that you will apply all your changes to a temporary *draftState*, which is a proxy of the *currentState*. Once all your mutations are completed, Immer will produce the *nextState* based on the mutations to the draft state. This means that you can interact with your data by simply modifying it while keeping all the benefits of immutable data.
+
+Exemplo:
+
+```react
+import produce from "immer"
+
+const baseState = [
+    {
+        todo: "Learn typescript",
+        done: true
+    },
+    {
+        todo: "Try immer",
+        done: false
+    }
+]
+
+const nextState = produce(baseState, draftState => {
+    draftState.push({todo: "Tweet about it"})
+    draftState[1].done = true
+})
+```
+
+Vamos ver na prática no nosso projeto.
+
+Precisamos agora retornar o resultado próximo estado que o produce irá retornar, ele recebeu o state atual e o draft que é uma cópia do estado, com isso fizemos um verificação no array de carrinho para verificar se o produto já estava inserido, retornando a posição dele no array.
+
+Se tem o produto, o productIndex recebe o id dele.
+
+Verifico se é maior que zero, isso é, ele se ele tiver valor maior que zero então ele achou o produto.
+
+Portanto ele altera o valor do amount acrescentando mais um ao valor.
+
+Se não tivesse o produto, ele colocaria amount igual a 1 mesmo e das próximas vezes que adicionasse iria só incrementando esse valor.
+
+```react
+import produce from 'immer';
+
+export default function cart(state = [], action) {
+  switch (action.type) {
+    case 'ADD_TO_CART':
+      return produce(state, draft => {
+        const productIndex = draft.findIndex(p => p.id === action.product.id);
+        if (productIndex >= 0) {
+          draft[productIndex].amount += 1;
+        } else {
+          draft.push({ ...action.product, amount: 1 });
+        }
+      });
+    default:
+      return state;
+  }
+}
+```
+
+Pronto, agora é só testar! O produto não duplica, mas aumenta o valor da quantidade.
+
+## Aula 15 - Remover produto
+
+Quando o usuário clicar no botão com ícone de lixeira para remover produto vamos remover do array do reducer do cart.
+
+O carrinho já está conectado com o Redux, então só passar a função dispatch para disparar uma action para deletar o produto do carrinho informando o id do produto.
+
+```react
+...
+function  Cart({ cart, dispatch }) { ... }
+...
+<MdDelete
+   size={20}
+   color="#7169c1"
+   onClick={() => dispatch({ type: 'REMOVE_FROM_CART', id: product.id })}
+/>
+```
+
+Pronto, agora a action vai ser disparada pelo dispatch, agora só falta fazer o reducer tratar essa ação, pois ouvir ele já está ouvindo. Pode testar no reactotron e ver que o log já aparece.
+
+Para isso no cart/reducer.js:
+
+```react
+case 'REMOVE_FROM_CART':
+  return produce(state, draft => {
+    const productIndex = draft.findIndex(p => p.id === action.id);
+    if (productIndex >= 0) {
+      draft.splice(productIndex, 1);
+    }
+ });
+```
+
+Busco a posição do produto o produto pelo id, se tiver presente no array, removo um item do array usando slice, informando a posição e quantos itens a partir da posição, no nosso caso apenas 1, o próprio produto.
+
+Pronto, agora é só testar.
+
+## Aula 16 - Refatorando as actions
+
+Uma prática muito legal é separar as actions em um único arquivo por funcionalidade, e não deixar elas espalhadas no código como estão, e também criar uma variável onde armazenaremos o nome da action, para evitar erros de digitação e facilitar a manunteção dos nomes dessas actions.
+
+Para fazer isso, vamos criar um arquivo `actions.js` dentro da pasta `store/models/cart`:
+
+```react
+export function addToCart(product) {
+  return {
+    type: 'ADD_TO_CART',
+    product,
+  };
+}
+
+export function removeFromCart(id) {
+  return {
+    type: 'REMOVE_FROM_CART',
+    id,
+  };
+}
+```
+
+Agora vamos usar essas funções nos componentes das telas Home e no Cart.
+
+```react
+import  *  as CartActions from  '../../store/models/cart/actions';
+
+ handleAddProduct = product => {
+    const { dispatch } = this.props;
+
+    dispatch(CartActions.addToCart(product));
+  };
+```
+
+Pronto, dessa forma já podemos continuar adicionando produtos ao carrinho, mas podemos mudar um pouco mais para melhorar o código.
+
+Importamos o bindActionCreators do Redux:
+
+```react
+import { bindActionCreators } from  'redux';
+```
+
+E assim como criamos o mapStateToProps, vamos criar o mapDispatchToProps:
+
+```react
+const mapDispatchToProps = dispatch =>
+  bindActionCreators(CartActions, dispatch);
+```
+
+ele recebe o dispatch do redux, e o bindActionCreators faz a combinação de actions. Agora além de podermos ter o state nas props teremos também as actions.
+
+E passamos como segundo parâmetro da função connect a função `mapDispatchToProps`.
+
+Foi setado `null` na primeira posição pois esse componente não lida com estado.
+
+```react
+export default connect(
+  null,
+  mapDispatchToProps
+)(Home);
+```
+
+Pronto! Agora está funcionando, e o mesmo passo a passo vou fazer no carrinho também.
+
+Legal também manter as actions com o nome da funcionalidade + ação, então vou alterar:
+
+```react
+export function addToCart(product) {
+  return {
+    type: '@cart/ADD',
+    product,
+  };
+}
+
+export function removeFromCart(id) {
+  return {
+    type: '@cart/REMOVE',
+    id,
+  };
+}
+```
+
+E alterei também no reducer para ouvir corretamente, veja detalhes no código.
+
+## Aula 17 - Alterando quantidade
+
+Vamos adicionar ou remover a quantidade de itens do produto.
+
+Primeiro criamos uma action para atualizar a quantidade:
+
+```react
+export function updateAmount(id, amount) {
+  return {
+    type: '@cart/UPDATE_AMOUNT',
+    id,
+    amount,
+  };
+}
+```
+
+A action recebe o id do produto e a quantidade que deverá ser atualizada.
+
+Depois conectamos essa função no componente do Carrinho:
+
+```react
+import React from 'react';
+import { connect } from 'react-redux';
+import {
+  MdRemoveCircleOutline,
+  MdAddCircleOutline,
+  MdDelete,
+} from 'react-icons/md';
+import { bindActionCreators } from 'redux';
+import { Container, ProductTable, Total } from './styles';
+import * as CartActions from '../../store/models/cart/actions';
+
+function Cart({ cart, removeFromCart, updateAmount }) {
+  function increment(product) {
+    updateAmount(product.id, product.amount + 1);
+  }
+  function decrement(product) {
+    updateAmount(product.id, product.amount - 1);
+  }
+
+  return (
+    <Container>
+      <ProductTable>
+        <thead>
+          <tr>
+            <th />
+            <th>PRODUTO</th>
+            <th>QTD</th>
+            <th>SUBTOTAL</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          {cart.map(product => (
+            <tr>
+              <td>
+                <img src={product.image} alt={product.title} />
+              </td>
+              <td>
+                <strong>{product.title}</strong>
+                <span>{product.price}</span>
+              </td>
+              <td>
+                <div>
+                  <button type="button">
+                    <MdRemoveCircleOutline
+                      size={20}
+                      color="#7169c1"
+                      onClick={() => decrement(product)}
+                    />
+                  </button>
+                  <input type="number" readOnly value={product.amount} />
+                  <button type="button">
+                    <MdAddCircleOutline
+                      size={20}
+                      color="#7169c1"
+                      onClick={() => increment(product)}
+                    />
+                  </button>
+                </div>
+              </td>
+              <td>
+                <strong>R$ 258,80</strong>
+              </td>
+              <td>
+                <div>
+                  <button type="button">
+                    <MdDelete
+                      size={20}
+                      color="#7169c1"
+                      onClick={() => removeFromCart(product.id)}
+                    />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </ProductTable>
+
+      <footer>
+        <button type="button">Finalizar Pedido</button>
+
+        <Total>
+          <span>TOTAL</span>
+          <strong>R$ 1.920,28</strong>
+        </Total>
+      </footer>
+    </Container>
+  );
+}
+
+const mapDispatchToProps = dispatch =>
+  bindActionCreators(CartActions, dispatch);
+
+const mapStateToProps = state => ({
+  cart: state.cart,
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Cart);
+```
+
+Foi criado duas funções que foram utilizadas nos botões de incrementar e decrementar a quantidade de produto no carrinho:
+
+```react
+  function increment(product) {
+    updateAmount(product.id, product.amount + 1);
+  }
+  function decrement(product) {
+    updateAmount(product.id, product.amount - 1);
+  }
+```
+
+Por fim criamos mais um case para tratar a chamada da action de atualizar quantidade:
+
+```react
+...
+    case '@cart/UPDATE_AMOUNT': {
+      if (action.amount <= 0) {
+        return state;
+      }
+      return produce(state, draft => {
+        const productIndex = draft.findIndex(p => p.id === action.id);
+        if (productIndex >= 0) {
+          draft[productIndex].amount = Number(action.amount);
+        }
+      });
+ ...
+```
+
+Pronto, só testar.
