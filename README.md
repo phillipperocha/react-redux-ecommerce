@@ -1170,3 +1170,75 @@ Por fim criamos mais um case para tratar a chamada da action de atualizar quanti
 ```
 
 Pronto, só testar.
+
+## Aula 18 - Calculando totais
+
+Vamos calcular o subtotal do produto que é a quantidade x preço do produto.
+
+Não é uma boa prática fazer cálculos dentro do render do React, pois a cada atualização do valor esse cálculo vai ser feito e onerar o site com vários processos que não são necessários em tela.
+
+O melhor lugar de fazer calculo dos valores é quando está mapeando o estado para as props, onde o estado já foi atualizado e ele vai retornar o estado, podemos fazer algumas modificações adicionais.
+
+Como queremos formatar o subtotal vamos utilizar a função `formatPrice` novamente:
+
+```react
+import { formatPrice } from  '../../util/format';
+```
+
+E adicionar o cálculo do subtotal para cada produto:
+
+```react
+const mapStateToProps = state => ({
+  cart: state.cart.map(product => ({
+    ...product,
+    subtotal: formatPrice(product.price * product.amount),
+  })),
+});
+```
+
+Para a prop cart: vamos retornar um array de produtos adicionando a propriedade subtotal ao product.
+
+E depois só utilizar essa propriedade:
+
+```react
+<td>
+   <strong>{product.subtotal}</strong>
+</td>
+```
+
+Pronto, a cada alteração no amount vai ser feito o cálculo do subtotal de todos os valores.
+
+Vamos fazer agora o cálculo do valor total do carrinho:
+
+```react
+const mapStateToProps = state => ({
+  cart: state.cart.map(product => ({
+    ...product,
+    subtotal: formatPrice(product.price * product.amount),
+  })),
+  total: formatPrice(
+    state.cart.reduce((total, product) => {
+      return total + product.price * product.amount;
+    }, 0)
+  ),
+});
+```
+
+Criamos uma nova prop total que recebe o valor total dos itens no carrinho.
+
+Só acessar a prop total:
+
+```react
+function  Cart({ cart, removeFromCart, updateAmount, total }) { ... }
+```
+
+E usar no seu devido lugar:
+
+```react
+<Total>
+	<span>TOTAL</span>
+	<strong>{total}</strong>
+</Total>
+```
+
+Pronto, só testar!
