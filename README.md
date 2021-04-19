@@ -328,7 +328,7 @@ Pronto agora o app volta a funcionar.
 
 Porém se aplicação crescer demais, é interessante separar os reducers em outro arquivo, por módulo e funcionalidade.
 
-Então vamos criar uma pasta `models` e dentro dela outra pasta `cart` com o arquivo `reducers.js`:
+Então vamos criar uma pasta `models` e dentro dela outra pasta `cart` com o arquivo `reducer.js`:
 
 E dentro dela colocar o reducer de carrinho.
 
